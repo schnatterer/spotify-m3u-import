@@ -5,7 +5,6 @@ import eyed3
 import argparse
 import os
 import sys
-import pprint
 import logging
 import logging.handlers
 import spotipy
@@ -13,17 +12,22 @@ import spotipy.util as util
 from difflib import SequenceMatcher
 from termcolor import colored
 
+
 def parse_arguments():
     p = argparse.ArgumentParser(description='A script to import a m3u playlist into Spotify')
     p.add_argument('-f', '--file', help='Path to m3u playlist file', type=argparse.FileType('r'), required=True)
     p.add_argument('-u', '--username', help='Spotify username', required=True)
+    p.add_argument('-u', '--client_id', help='Spotify client id', required=True)
+    p.add_argument('-u', '--client_secret', help='Spotify client secret', required=True)
+    p.add_argument('-u', '--redirect_uri', help='Spotify redirect url', required=True)
     p.add_argument('-d', '--debug', help='Debug mode', action='store_true', default=False)
     return p.parse_args()
+
 
 def load_playlist_file(playlist_file):
     tracks = []
     try:
-        content = [ line.strip() for line in playlist_file if line.strip() and not line.startswith("#") ]
+        content = [line.strip() for line in playlist_file if line.strip() and not line.startswith("#")]
     except Exception as e:
         logger.critical('Playlist file "%s" failed load: %s' % (playlist_file, str(e)))
         sys.exit(1)
@@ -31,6 +35,7 @@ def load_playlist_file(playlist_file):
         for track in content:
             tracks.append({'path': track})
         return tracks
+
 
 def read_id3_tags(file_name):
     tag_data = False
@@ -45,6 +50,7 @@ def read_id3_tags(file_name):
                 tag_data = {'artist': track_id3.tag.artist, 'title': track_id3.tag.title}
     return tag_data
 
+
 def guess_missing_track_info(file_name):
     guess = False
     filename = os.path.basename(file_name)
@@ -56,9 +62,11 @@ def guess_missing_track_info(file_name):
         guess['title'] = track_uri_parts[1].strip()
     return guess
 
+
 def find_spotify_track(track):
     def _select_result_from_spotify_search(search_string, track_name, spotify_match_threshold):
         logger.debug('Searching Spotify for "%s" trying to find track called "%s"' % (search_string, track_name))
+
         def _how_similar(a, b):
             return SequenceMatcher(None, a, b).ratio()
         results_raw = sp.search(q=search_string, limit=30)
@@ -97,6 +105,7 @@ def find_spotify_track(track):
             return seach_result
     return False
 
+
 def format_track_info(track):
     if track['id3_data']:
         formatted_id3_data = '%s - %s' % (repr(track['id3_data']['artist']), repr(track['id3_data']['title']))
@@ -117,6 +126,7 @@ def format_track_info(track):
         formatted_guess,
         formatted_spotify
     )
+
 
 if __name__ == "__main__":
     args = parse_arguments()
@@ -143,7 +153,7 @@ if __name__ == "__main__":
 
         print format_track_info(track)
 
-    spotify_tracks = [ k['spotify_data']['id'] for k in tracks if k.get('spotify_data') ]
+    spotify_tracks = [k['spotify_data']['id'] for k in tracks if k.get('spotify_data')]
     spotify_playlist_name = args.file.name
     spotify_username = args.username
 
@@ -153,7 +163,7 @@ if __name__ == "__main__":
 
     print '\n%s/%s of tracks matched on Spotify, creating playlist "%s" on Spotify...' % (len(spotify_tracks), len(tracks), spotify_playlist_name),
 
-    token = util.prompt_for_user_token(spotify_username, 'playlist-modify-private')
+    token = util.prompt_for_user_token(spotify_username, 'playlist-modify-private', client_id=client_id,client_secret=client_secret,redirect_uri=redirect_uri)
 
     if token:
         try:
