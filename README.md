@@ -12,6 +12,13 @@ It will:
 
 ## Installation and requirements
 
+Create virtual environment for python 2.7
+
+Example using virtualenv wrapper
+```
+mkvirtualenv spotify-m3u-import -p python2.7
+```
+
 Install python modules:
 
 ```
@@ -23,14 +30,6 @@ Take 5 mins to register an app to get access to the Spotify API:
 https://developer.spotify.com/my-applications/#!/
 
 The Redirect URI doesn't need to be valid, it can be a non-existant domain.
-
-Export Spotify related environment variables from your new app:
-
-```
-export SPOTIPY_CLIENT_ID='your-spotify-client-id'
-export SPOTIPY_CLIENT_SECRET='your-spotify-client-secret'
-export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
-```
 
 ## Example
 
@@ -45,9 +44,15 @@ optional arguments:
   -f FILE, --file FILE  Path to m3u playlist file
   -u USERNAME, --username USERNAME
                         Spotify username
+  -c CLIENT_ID, --client_id CLIENT_ID
+                        Spotify client id
+  -s CLIENT_SECRET, --client_secret CLIENT_SECRET
+                        Spotify client secret
+  -r REDIRECT_URI, --redirect_uri REDIRECT_URI
+                        Spotify redirect url
   -d, --debug           Debug mode
 $ 
-$ ./read-id3-tags.py -f my_playlist.m3u -u my_username
+$ ./read-id3-tags.py -f my_playlist.m3u -u my_username -c 5345235325 -s 5435345345 -r http://asdasfsdafsdafd.com
 Parsed 3 tracks from my_playlist.m3u
 
 tracks/inspectah deck - the movement - 12 - vendetta.mp3
@@ -67,3 +72,8 @@ Spotify: Dave Spoon - At Night - Shadow Child & T. Williams Re-vibe, 1JEA273o693
 
 3/3 of tracks matched on Spotify, creating playlist "my_playlist.m3u" on Spotify... done
 ```
+
+## TODO
+- Parse remixes to download originals if can not find the remix.
+
+

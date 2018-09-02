@@ -10,16 +10,15 @@ import logging.handlers
 import spotipy
 import spotipy.util as util
 from difflib import SequenceMatcher
-from termcolor import colored
 
 
 def parse_arguments():
     p = argparse.ArgumentParser(description='A script to import a m3u playlist into Spotify')
     p.add_argument('-f', '--file', help='Path to m3u playlist file', type=argparse.FileType('r'), required=True)
     p.add_argument('-u', '--username', help='Spotify username', required=True)
-    p.add_argument('-u', '--client_id', help='Spotify client id', required=True)
-    p.add_argument('-u', '--client_secret', help='Spotify client secret', required=True)
-    p.add_argument('-u', '--redirect_uri', help='Spotify redirect url', required=True)
+    p.add_argument('-c', '--client_id', help='Spotify client id', required=True)
+    p.add_argument('-s', '--client_secret', help='Spotify client secret', required=True)
+    p.add_argument('-r', '--redirect_uri', help='Spotify redirect url', required=True)
     p.add_argument('-d', '--debug', help='Debug mode', action='store_true', default=False)
     return p.parse_args()
 
@@ -111,17 +110,17 @@ def format_track_info(track):
         formatted_id3_data = '%s - %s' % (repr(track['id3_data']['artist']), repr(track['id3_data']['title']))
         formatted_guess = 'Not required'
     else:
-        formatted_id3_data = colored('None', 'red')
+        formatted_id3_data = 'None'
         if track['guess']:
             formatted_guess = '%s - %s' % (repr(track['guess']['artist']), repr(track['guess']['title']))
         else:
-            formatted_guess = colored('None', 'red')
+            formatted_guess = 'None'
     if track['spotify_data']:
-        formatted_spotify = colored('%s - %s, %s' % (repr(track['spotify_data']['artist']), repr(track['spotify_data']['title']), repr(track['spotify_data']['id'])), 'green')
+        formatted_spotify = '%s - %s, %s' % (repr(track['spotify_data']['artist']), repr(track['spotify_data']['title']), repr(track['spotify_data']['id']))
     else:
-        formatted_spotify = colored('None', 'red')
+        formatted_spotify = 'None'
     return '\n%s\nIDv3 tag data: %s\nGuess from filename: %s\nSpotify: %s' % (
-        colored(repr(track['path']), 'blue'),
+        repr(track['path']),
         formatted_id3_data,
         formatted_guess,
         formatted_spotify
@@ -130,7 +129,8 @@ def format_track_info(track):
 
 if __name__ == "__main__":
     args = parse_arguments()
-    sp = spotipy.Spotify()
+    token = util.prompt_for_user_token(args.username, 'playlist-modify-private', client_id=args.client_id,client_secret=args.client_secret,redirect_uri=args.redirect_uri)
+    sp = spotipy.Spotify(auth=token)
 
     logger = logging.getLogger(__name__)
     if args.debug:
@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
     tracks = load_playlist_file(args.file)
 
-    print colored('Parsed %s tracks from %s' % (len(tracks), args.file.name), 'green')
+    print ('Parsed %s tracks from %s' % (len(tracks), args.file.name), 'green')
 
     for track in tracks:
         track['id3_data'] = read_id3_tags(track['path'])
@@ -162,8 +162,6 @@ if __name__ == "__main__":
         sys.exit(0)
 
     print '\n%s/%s of tracks matched on Spotify, creating playlist "%s" on Spotify...' % (len(spotify_tracks), len(tracks), spotify_playlist_name),
-
-    token = util.prompt_for_user_token(spotify_username, 'playlist-modify-private', client_id=client_id,client_secret=client_secret,redirect_uri=redirect_uri)
 
     if token:
         try:

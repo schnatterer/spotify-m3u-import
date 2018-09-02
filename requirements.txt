@@ -1,3 +1,2 @@
 spotipy
 eyed3
-termcolor
