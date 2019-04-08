@@ -13,8 +13,9 @@ from difflib import SequenceMatcher
 
 
 def parse_arguments():
-    p = argparse.ArgumentParser(description='A script to import a m3u playlist into Spotify')
-    p.add_argument('-f', '--file', help='Path to m3u playlist file', type=argparse.FileType('r'), required=True)
+    p = argparse.ArgumentParser(description='A script to import a m3u8 playlist into Spotify')
+    p.add_argument('-f', '--file', help='Path to m3u8 playlist file', type=argparse.FileType('r', encoding="utf-8-sig"), required=True)
+    p.add_argument('-t', '--title', help='Spotify playlist name', required=False)
     p.add_argument('-u', '--username', help='Spotify username', required=True)
     p.add_argument('-c', '--client_id', help='Spotify client id', required=True)
     p.add_argument('-s', '--client_secret', help='Spotify client secret', required=True)
@@ -129,48 +130,47 @@ def format_track_info(track):
 
 if __name__ == "__main__":
     args = parse_arguments()
-    token = util.prompt_for_user_token(args.username, 'playlist-modify-private', client_id=args.client_id,client_secret=args.client_secret,redirect_uri=args.redirect_uri)
-    sp = spotipy.Spotify(auth=token)
-
-    logger = logging.getLogger(__name__)
-    if args.debug:
-        logger.setLevel(logging.DEBUG)
-        stdout_level = logging.DEBUG
-    else:
-        logger.setLevel(logging.CRITICAL)
-        eyed3.log.setLevel("ERROR")
-        stdout_level = logging.CRITICAL
-
-    tracks = load_playlist_file(args.file)
-
-    print ('Parsed %s tracks from %s' % (len(tracks), args.file.name), 'green')
-
-    for track in tracks:
-        track['id3_data'] = read_id3_tags(track['path'])
-        if not track['id3_data']:
-            track['guess'] = guess_missing_track_info(track['path'])
-        track['spotify_data'] = find_spotify_track(track)
-
-        print format_track_info(track)
-
-    spotify_tracks = [k['spotify_data']['id'] for k in tracks if k.get('spotify_data')]
-    spotify_playlist_name = args.file.name
     spotify_username = args.username
-
-    if len(spotify_tracks) < 1:
-        print '\nNo tracks matched on Spotify'
-        sys.exit(0)
-
-    print '\n%s/%s of tracks matched on Spotify, creating playlist "%s" on Spotify...' % (len(spotify_tracks), len(tracks), spotify_playlist_name),
-
+    token = util.prompt_for_user_token(spotify_username, 'playlist-modify-private', client_id=args.client_id,client_secret=args.client_secret,redirect_uri=args.redirect_uri)
     if token:
         try:
             sp = spotipy.Spotify(auth=token)
             sp.trace = False
+
+            logger = logging.getLogger(__name__)
+            if args.debug:
+                logger.setLevel(logging.DEBUG)
+                stdout_level = logging.DEBUG
+            else:
+                logger.setLevel(logging.CRITICAL)
+                eyed3.log.setLevel("ERROR")
+                stdout_level = logging.CRITICAL
+            
+            tracks = load_playlist_file(args.file)
+
+            print('Parsed %s tracks from %s' % (len(tracks), args.file.name))
+
+            for track in tracks:
+                track['id3_data'] = read_id3_tags(track['path'])
+                if not track['id3_data']:
+                    track['guess'] = guess_missing_track_info(track['path'])
+                track['spotify_data'] = find_spotify_track(track)
+
+                print(format_track_info(track))
+
+            spotify_tracks = [k['spotify_data']['id'] for k in tracks if k.get('spotify_data')]
+            spotify_playlist_name = os.path.splitext(args.file.name)[0]
+
+            if len(spotify_tracks) < 1:
+                print('\nNo tracks matched on Spotify')
+                sys.exit(0)
+
+            print('\n%s/%s of tracks matched on Spotify, creating playlist "%s" on Spotify...' % (len(spotify_tracks), len(tracks), spotify_playlist_name))
+            
             playlist = sp.user_playlist_create(spotify_username, spotify_playlist_name, public=False)
             if len(spotify_tracks) > 100:
                 def chunker(seq, size):
-                    return (seq[pos:pos + size] for pos in xrange(0, len(seq), size))
+                    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
                 for spotify_tracks_chunk in chunker(spotify_tracks, 100):
                     results = sp.user_playlist_add_tracks(spotify_username, playlist['id'], spotify_tracks_chunk)
             else:
@@ -178,6 +178,6 @@ if __name__ == "__main__":
         except Exception as e:
             logger.critical('Spotify error: %s' % str(e))
         else:
-            print 'done\n'
+            print('done\n')
     else:
         logger.critical('Can\'t get token for %s user' % spotify_username)

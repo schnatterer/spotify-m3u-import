@@ -1,6 +1,6 @@
 # spotify-m3u-import
 
-A small python script to create a Spotify playlist from a m3u playlist file.
+A small python script to create a Spotify playlist from a m3u8 playlist file.
 
 It will:
 
@@ -12,11 +12,11 @@ It will:
 
 ## Installation and requirements
 
-Create virtual environment for python 2.7
+Create virtual environment
 
 Example using virtualenv wrapper
 ```
-mkvirtualenv spotify-m3u-import -p python2.7
+mkvirtualenv spotify-m3u-import-env
 ```
 
 Install python modules:
@@ -35,13 +35,12 @@ The Redirect URI doesn't need to be valid, it can be a non-existant domain.
 
 ```
 $ ./read-id3-tags.py --help
-usage: read-id3-tags.py [-h] -f FILE -u USERNAME [-d]
+usage: read-id3-tags.py [-h] -f FILE [-t TITLE] -u USERNAME -c CLIENT_ID -s CLIENT_SECRET -r REDIRECT_URI [-d]
 
-A script to import a m3u playlist into Spotify
+A script to import a m3u8 playlist into Spotify
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -f FILE, --file FILE  Path to m3u playlist file
+arguments:
+  -f FILE, --file FILE  Path to m3u8 playlist file
   -u USERNAME, --username USERNAME
                         Spotify username
   -c CLIENT_ID, --client_id CLIENT_ID
@@ -50,10 +49,14 @@ optional arguments:
                         Spotify client secret
   -r REDIRECT_URI, --redirect_uri REDIRECT_URI
                         Spotify redirect url
+optional arguments:
+  -h, --help            show this help message and exit
+  -t TITLE, --title TITLE 
+                        Spotify playlist name
   -d, --debug           Debug mode
 $ 
-$ ./read-id3-tags.py -f my_playlist.m3u -u my_username -c 5345235325 -s 5435345345 -r http://asdasfsdafsdafd.com
-Parsed 3 tracks from my_playlist.m3u
+$ ./read-id3-tags.py -f my_playlist.m3u8 -u 2gar3ca9le -c q87ofe38ya -s 1z75hnff99 -r http://localhost/
+Parsed 3 tracks from my_playlist.m3u8
 
 tracks/inspectah deck - the movement - 12 - vendetta.mp3
 IDv3 tag data: Inspectah Deck - Vendetta
@@ -70,10 +73,5 @@ IDv3 tag data: None
 Guess from filename: dave spoon - at night (shadow child & t. williams re
 Spotify: Dave Spoon - At Night - Shadow Child & T. Williams Re-vibe, 1JEA273o693GwuI39gayHk
 
-3/3 of tracks matched on Spotify, creating playlist "my_playlist.m3u" on Spotify... done
+3/3 of tracks matched on Spotify, creating playlist "my_playlist" on Spotify... done
 ```
-
-## TODO
-- Parse remixes to download originals if can not find the remix.
-
-
