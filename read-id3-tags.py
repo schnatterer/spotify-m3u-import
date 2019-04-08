@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import eyed3
+from tinytag import TinyTag
 import argparse
 import os
 import sys
@@ -40,14 +40,15 @@ def load_playlist_file(playlist_file):
 def read_id3_tags(file_name):
     tag_data = False
     try:
-        track_id3 = eyed3.load(file_name)
+        track_id3 = TinyTag.get(file_name, duration=False)
     except Exception as e:
         logger.debug('Track "%s" failed ID3 tag load: %s' % (track, str(e)))
     else:
         logger.debug('Reading tags from "%s"' % track)
-        if track_id3.tag is not None:
-            if track_id3.tag.artist is not None and track_id3.tag.title is not None:
-                tag_data = {'artist': track_id3.tag.artist, 'title': track_id3.tag.title}
+        if track_id3 is not None:
+            if track_id3.artist is not None and track_id3.title is not None:
+                tag_data = {'artist': track_id3.artist.rstrip('\x00'), 'title': track_id3.title.rstrip('\x00')}
+                logger.debug('Read tags %s' % tag_data)
     return tag_data
 
 
@@ -143,7 +144,6 @@ if __name__ == "__main__":
                 stdout_level = logging.DEBUG
             else:
                 logger.setLevel(logging.CRITICAL)
-                eyed3.log.setLevel("ERROR")
                 stdout_level = logging.CRITICAL
             
             tracks = load_playlist_file(args.file)
@@ -159,12 +159,16 @@ if __name__ == "__main__":
                 print(format_track_info(track))
 
             spotify_tracks = [k['spotify_data']['id'] for k in tracks if k.get('spotify_data')]
-            spotify_playlist_name = os.path.splitext(args.file.name)[0]
+            spotify_playlist_name = ""
+            if args.title:
+                spotify_playlist_name = args.title
+            else:
+                spotify_playlist_name = os.path.splitext(args.file.name)[0]
 
             if len(spotify_tracks) < 1:
                 print('\nNo tracks matched on Spotify')
                 sys.exit(0)
-
+            
             print('\n%s/%s of tracks matched on Spotify, creating playlist "%s" on Spotify...' % (len(spotify_tracks), len(tracks), spotify_playlist_name))
             
             playlist = sp.user_playlist_create(spotify_username, spotify_playlist_name, public=False)
