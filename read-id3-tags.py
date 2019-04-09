@@ -83,10 +83,10 @@ def find_spotify_track(track):
                 return {'id': spotify_results_sorted[0]['id'], 'title': spotify_results_sorted[0]['name'], 'artist': spotify_results_sorted[0]['artists'][0]['name']}
         logger.debug('No good Spotify result found')
         return False
-    spotify_match_threshold = 0.5
+    spotify_match_threshold = 0.3
     # search by id3 tags
     if track['id3_data'] and 'artist' in track['id3_data'] and 'title' in track['id3_data']:
-        spotify_search_string = '%s %s' % (track['id3_data']['artist'], track['id3_data']['title'])
+        spotify_search_string = 'artist:%s track:%s' % (track['id3_data']['artist'], track['id3_data']['title'])
         seach_result = _select_result_from_spotify_search(
             spotify_search_string,
             track['id3_data']['title'],
@@ -96,7 +96,7 @@ def find_spotify_track(track):
             return seach_result
     # search by track['guess']
     if 'guess' in track and track['guess'] and 'artist' in track['guess'] and 'title' in track['guess']:
-        spotify_search_string = '%s %s' % (track['guess']['artist'], track['guess']['title'])
+        spotify_search_string = 'artist:%s track:%s' % (track['guess']['artist'], track['guess']['title'])
         seach_result = _select_result_from_spotify_search(
             spotify_search_string,
             track['guess']['title'],
@@ -168,7 +168,7 @@ if __name__ == "__main__":
             if len(spotify_tracks) < 1:
                 print('\nNo tracks matched on Spotify')
                 sys.exit(0)
-            
+
             print('\n%s/%s of tracks matched on Spotify, creating playlist "%s" on Spotify...' % (len(spotify_tracks), len(tracks), spotify_playlist_name))
             
             playlist = sp.user_playlist_create(spotify_username, spotify_playlist_name, public=False)
