@@ -90,10 +90,8 @@ Spotify: Dave Spoon - At Night - Shadow Child & T. Williams Re-vibe, 1JEA273o693
 docker build -t m3u
 
 docker run --rm \
-  -e SPOTIFY_CLIENT_ID=abc \
-  -e SPOTIFY_CLIENT_SECRET=def \
   -v $(pwd):/app \
-  m3u -f /app/my.m3u -u xyz
+  m3u -f /app/my.m3u -u xyz -c abc -s def -r http://localhost:8080
 ```
 
 ## Acknowledgments
