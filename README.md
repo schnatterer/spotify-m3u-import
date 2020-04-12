@@ -67,3 +67,15 @@ Spotify: Dave Spoon - At Night - Shadow Child & T. Williams Re-vibe, 1JEA273o693
 
 3/3 of tracks matched on Spotify, creating playlist "my_playlist.m3u" on Spotify... done
 ```
+
+## Docker
+
+```bash
+docker build -t m3u
+
+docker run --rm \
+  -e SPOTIFY_CLIENT_ID=abc \
+  -e SPOTIFY_CLIENT_SECRET=def \
+  -v $(pwd):/app \
+  m3u -f /app/my.m3u -u xyz
+```
